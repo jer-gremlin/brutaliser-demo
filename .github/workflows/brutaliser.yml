@@ -4,8 +4,10 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
 
+# `contents: write` is required by the GraphQL convertPullRequestToDraft
+# mutation even though `pull-requests: write` looks sufficient.
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 concurrency:
