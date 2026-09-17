@@ -122,7 +122,8 @@ add_label() {
 }
 
 mark_draft() {
-	local pr="${PR:-}" is_draft
+	local pr="${PR:-}" is_draft out
+
 	[[ "$MARK_DRAFT" == "true" ]] || return 0
 	[[ -n "$pr" ]] || {
 		warn "PR not set, skipping draft"
@@ -139,7 +140,9 @@ mark_draft() {
 		return 0
 	fi
 
-	gh pr ready "$pr" --undo >/dev/null 2>&1 || warn "could not convert #${pr} to draft"
+	if ! out="$(gh pr ready "$pr" --undo 2>&1)"; then
+		warn "could not convert #${pr} to draft: ${out}"
+	fi
 }
 
 approval_count() {
