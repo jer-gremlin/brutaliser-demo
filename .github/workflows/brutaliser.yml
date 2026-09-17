@@ -4,8 +4,10 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
 
+# `contents: write` is required by the GraphQL convertPullRequestToDraft
+# mutation even though `pull-requests: write` looks sufficient.
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 concurrency:
@@ -20,7 +22,7 @@ jobs:
       - name: Checkout trusted base
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ github.event.pull_request.base.ref }}
           fetch-depth: 0
 
       - name: Fetch pull request head
@@ -34,7 +36,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TARGET: ${{ github.event.pull_request.base.ref }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_REF: origin/pr-head
           PR: ${{ github.event.pull_request.number }}
           LOC_THRESHOLD: "500"
