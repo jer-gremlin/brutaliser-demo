@@ -1,0 +1,55 @@
+name: brutaliser
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: brutaliser-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  loc-budget:
+    name: LOC budget
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trusted base
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+
+      - name: Fetch pull request head
+        run: |
+          git fetch --no-tags origin \
+            "+refs/pull/${{ github.event.pull_request.number }}/head:refs/remotes/origin/pr-head"
+
+      - name: Enforce LOC budget
+        id: loc
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET: ${{ github.event.pull_request.base.ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_REF: origin/pr-head
+          PR: ${{ github.event.pull_request.number }}
+          LOC_THRESHOLD: "500"
+          REQUIRED_APPROVALS: "3"
+        run: bash scripts/brutaliser.sh check
+
+      - name: Enforce approvals for oversized pull requests
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          REQUIRED_APPROVALS: "3"
+        run: bash scripts/brutaliser.sh approvals
+
+      - name: Fail when over budget
+        if: steps.loc.outcome == 'failure'
+        run: |
+          echo "::error::Diff exceeds the LOC budget. See the LOC budget step."
+          exit 1

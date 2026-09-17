@@ -1,0 +1,6 @@
+# Extra paths that must not count towards the LOC budget.
+# One extended regular expression per line. Blank lines and # comments ignored.
+# Built-in rules already cover generated output, schemas, locks and snapshots.
+
+# ^docs/examples/.*$
+# ^.*\.testdata\.rs$
