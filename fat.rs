@@ -600,3 +600,4 @@ pub fn added_599() {}
 pub fn added_600() {}
 
 // retrigger 2
+// retrigger 3
